@@ -2,7 +2,7 @@ import struct
 
 def leer_cabecera(f):
     riff, size, wave = struct.unpack('<4sI4s', f.read(12))
-
+ø
     if riff != b'RIFF' or wave != b'WAVE':
         raise ValueError("No es WAV válido")
 
