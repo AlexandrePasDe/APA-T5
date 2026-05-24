@@ -98,3 +98,32 @@ def mono2estereo(ficIzq, ficDer, ficEste):
     with open(ficEste, 'wb') as f:
         escribir_cabecera(f, 2, cab1["rate"], 16, len(packed))
         f.write(packed)
+
+
+def codEstereo(ficEste, ficCod):
+    with open(ficEste, 'rb') as f:
+        cab = leer_cabecera(f)
+
+        if cab["channels"] != 2:
+            raise ValueError("Debe ser estéreo")
+        if cab["bits"] != 16:
+            raise ValueError("Debe ser 16 bits")
+
+        data = f.read()
+
+    muestras = struct.unpack('<' + 'h'*(len(data)//2), data)
+    pares = zip(muestras[0::2], muestras[1::2])
+
+    cod = []
+    for L, R in pares:
+        suma = (L + R) // 2
+        diff = (L - R) // 2
+
+        val = ((suma & 0xFFFF) << 16) | (diff & 0xFFFF)
+        cod.append(val)
+
+    packed = struct.pack('<' + 'I'*len(cod), *cod)
+
+    with open(ficCod, 'wb') as f:
+        escribir_cabecera(f, 1, cab["rate"], 32, len(packed))
+        f.write(packed)
