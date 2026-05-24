@@ -127,3 +127,37 @@ def codEstereo(ficEste, ficCod):
     with open(ficCod, 'wb') as f:
         escribir_cabecera(f, 1, cab["rate"], 32, len(packed))
         f.write(packed)
+
+
+def decEstereo(ficCod, ficEste):
+    with open(ficCod, 'rb') as f:
+        cab = leer_cabecera(f)
+
+        if cab["bits"] != 32:
+            raise ValueError("Debe ser 32 bits")
+
+        data = f.read()
+
+    valores = struct.unpack('<' + 'I'*(len(data)//4), data)
+
+    stereo = []
+
+    for v in valores:
+        suma = (v >> 16) & 0xFFFF
+        diff = v & 0xFFFF
+
+        if suma >= 32768:
+            suma -= 65536
+        if diff >= 32768:
+            diff -= 65536
+
+        L = suma + diff
+        R = suma - diff
+
+        stereo.extend([L, R])
+
+    packed = struct.pack('<' + 'h'*len(stereo), *stereo)
+
+    with open(ficEste, 'wb') as f:
+        escribir_cabecera(f, 2, cab["rate"], 16, len(packed))
+        f.write(packed)
