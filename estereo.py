@@ -1,8 +1,9 @@
 import struct
 
+
 def leer_cabecera(f):
     riff, size, wave = struct.unpack('<4sI4s', f.read(12))
-ø
+
     if riff != b'RIFF' or wave != b'WAVE':
         raise ValueError("No es WAV válido")
 
@@ -31,15 +32,20 @@ bits_per_sample = struct.unpack(
     }
 
 
-def leer_muestras_estereo(f, data_size):
-    data = f.read(data_size)
-    muestras = struct.unpack('<' + 'h' * (data_size // 2), data)
+def escribir_cabecera(f, num_channels, sample_rate, bits, data_size):
+    byte_rate = sample_rate * num_channels * bits // 8
+    block_align = num_channels * bits // 8
+    chunk_size = 36 + data_size
 
-    # separar canales
-    izquierda = muestras[0::2]
-    derecha = muestras[1::2]
-
-    return izquierda, derecha
+    f.write(struct.pack('<4sI4s', b'RIFF', chunk_size, b'WAVE'))
+    f.write(struct.pack('<4sIHHIIHH',
+                        b'fmt ', 16, 1,
+                        num_channels,
+                        sample_rate,
+                        byte_rate,
+                        block_align,
+                        bits))
+    f.write(struct.pack('<4sI', b'data', data_size))
 
 
 def estereo2mono(ficEste, ficMono, canal=2):
