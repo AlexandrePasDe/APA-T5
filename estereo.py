@@ -29,3 +29,16 @@ bits_per_sample = struct.unpack(
         "bits": bits_per_sample,
         "size": data_size
     }
+
+
+def leer_muestras_estereo(f, data_size):
+    data = f.read(data_size)
+    muestras = struct.unpack('<' + 'h' * (data_size // 2), data)
+
+    # separar canales
+    izquierda = muestras[0::2]
+    derecha = muestras[1::2]
+
+    return izquierda, derecha
+
+
