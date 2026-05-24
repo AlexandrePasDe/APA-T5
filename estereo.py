@@ -42,3 +42,33 @@ def leer_muestras_estereo(f, data_size):
     return izquierda, derecha
 
 
+def estereo2mono(ficEste, ficMono, canal=2):
+    with open(ficEste, 'rb') as f:
+        cab = leer_cabecera(f)
+
+        if cab["channels"] != 2:
+            raise ValueError("El fichero no es estéreo")
+
+        data = f.read()
+
+    muestras = struct.unpack('<' + 'h' * (len(data)//2), data)
+
+    L = muestras[0::2]
+    R = muestras[1::2]
+
+    if canal == 0:
+        mono = L
+    elif canal == 1:
+        mono = R
+    elif canal == 2:
+        mono = [(l + r)//2 for l, r in zip(L, R)]
+    elif canal == 3:
+        mono = [(l - r)//2 for l, r in zip(L, R)]
+    else:
+        raise ValueError("Canal inválido")
+
+    packed = struct.pack('<' + 'h'*len(mono), *mono)
+
+    with open(ficMono, 'wb') as f:
+        escribir_cabecera(f, 1, cab["rate"], 16, len(packed))
+        f.write(packed)
