@@ -72,3 +72,29 @@ def estereo2mono(ficEste, ficMono, canal=2):
     with open(ficMono, 'wb') as f:
         escribir_cabecera(f, 1, cab["rate"], 16, len(packed))
         f.write(packed)
+
+
+def mono2estereo(ficIzq, ficDer, ficEste):
+    with open(ficIzq, 'rb') as f1, open(ficDer, 'rb') as f2:
+        cab1 = leer_cabecera(f1)
+        cab2 = leer_cabecera(f2)
+
+        if cab1["channels"] != 1 or cab2["channels"] != 1:
+            raise ValueError("Ambos deben ser mono")
+
+        if cab1["rate"] != cab2["rate"]:
+            raise ValueError("Frecuencias no coinciden")
+
+        data1 = f1.read()
+        data2 = f2.read()
+
+    L = struct.unpack('<' + 'h'*(len(data1)//2), data1)
+    R = struct.unpack('<' + 'h'*(len(data2)//2), data2)
+
+    stereo = [val for pair in zip(L, R) for val in pair]
+
+    packed = struct.pack('<' + 'h'*len(stereo), *stereo)
+
+    with open(ficEste, 'wb') as f:
+        escribir_cabecera(f, 2, cab1["rate"], 16, len(packed))
+        f.write(packed)
